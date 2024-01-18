@@ -7,5 +7,5 @@ do
     virsh undefine $dom --remove-all-storage
 done
 
-virsh net-destroy k8s_net
-virsh pool-destroy k8s
+virsh net-undefine k8s_net
+virsh pool-undefine k8s
