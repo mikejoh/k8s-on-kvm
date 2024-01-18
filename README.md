@@ -5,6 +5,8 @@
 * KVM
 * OpenTofu (the `terraform` fork)
 
+_See the `scripts/` folder for various utility scripts._
+
 ## Deploy a cluster
 
 By default we'll deploy a cluster on three nodes, they will have both the control-plane and worker roles.
@@ -96,3 +98,5 @@ sudo virsh net-start k8s_net
 sudo virsh start <cluster name>-cp01
 sudo virst start <cluster name>-worker01
 ```
+
+## Clean up
