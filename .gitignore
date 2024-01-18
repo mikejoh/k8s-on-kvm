@@ -1,0 +1,4 @@
+*tfstate*
+*.img
+.terraform
+admin.conf

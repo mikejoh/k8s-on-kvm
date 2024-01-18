@@ -1,0 +1,98 @@
+# Kubernetes on KVM
+
+## Pre-requisites
+
+* KVM
+* OpenTofu (the `terraform` fork)
+
+## Deploy a cluster
+
+By default we'll deploy a cluster on three nodes, they will have both the control-plane and worker roles.
+
+_If you're setting a lower resource values on each node then you might need to set: `--ignore-preflight-errors=mem,numcpu` during `kubeadm init`._
+
+1. Change the `k8s.auto.tfvars` to fit your needs!
+2. Run `tofu init`
+3. Run `tofu plan`
+4. Run `tofu apply`
+5. SSH to all nodes using the private and public key pair you referenced when deploying the cluster. You can find the IP addresses of the cluster nodes by running:
+```
+sudo virsh net-dhcp-leases k8s_net
+```
+6. Install a CNI plugin:
+
+Flannel CNI:
+```
+kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+```
+Calico CNI:
+```
+kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
+```
+Cilium CNI: https://docs.cilium.io/en/stable/installation/k8s-install-kubeadm/#deploy-cilium
+
+## Multi node control plane (for high availability)
+
+Add control-plane nodes to the cluster:
+```
+echo "$(kubeadm token create --print-join-command) --control-plane --certificate-key $(kubeadm init phase upload-certs --upload-certs --skip-headers --skip-log-headers 2>/dev/null | tail -n 1)"
+```
+
+Add worker nodes to the cluster:
+1. Generate the join command on a control-plane node:
+```
+kubeadm token create --print-join-command
+```
+2. Use the generate join command and run that on the worker node.
+
+## Upgrade cluster
+
+On the first control-plane node:
+
+1. Upgrade `kubeadm`:
+```
+export NEXT_VERSION="1.26.2"
+
+apt-mark unhold kubeadm
+apt-get update
+apt-get install -y kubeadm=${NEXT_VERSION}-00
+apt-mark hold kubeadm
+```
+2. Check the upgrade plan:
+```
+kubeadm upgrade plan
+```
+3. Apply the upgrade plan:
+```
+kubeadm upgrade apply ${NEXT_VERSION}
+```
+4. Drain the node:
+```
+kubectl drain <node-to-drain> --ignore-daemonsets
+```
+5. Upgrade `kubectl` and `kubelet`:
+```
+apt-mark unhold kubelet kubectl
+apt-get update
+apt-get install -y kubelet=${NEXT_VERSION}-00 kubectl=${NEXT_VERSION}-00
+apt-mark hold kubelet kubectl
+```
+6. Restart the services:
+```
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
+```
+7. Uncordon the node to allow scheduling again:
+```
+kubectl uncordon <node-to-uncordon>
+```
+8. Repeat on the rest of the control-plane nodes!
+
+## After restart of your computer
+
+You might need to start your VMs manually after a restart:
+```
+sudo virsh net-start k8s_net
+sudo virsh start <cluster name>-cp01
+sudo virst start <cluster name>-worker01
+```
