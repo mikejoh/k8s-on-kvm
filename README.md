@@ -5,7 +5,10 @@
 * KVM
 * OpenTofu (the `terraform` fork)
 
-_See the `scripts/` folder for various utility scripts._
+## Notes
+
+* See the `scripts/` folder for various utility scripts.
+* You probably want to change `user` and `group` to `libvirt-qemu` and `kvm` respectively in `/etc/libvirt/qemu.conf` to mitigate permission issues on storage pools.
 
 ## Deploy a cluster
 
