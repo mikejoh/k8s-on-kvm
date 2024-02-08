@@ -10,7 +10,9 @@
 * See the `scripts/` folder for various utility scripts.
 * You probably want to change `user` and `group` to `libvirt-qemu` and `kvm` respectively in `/etc/libvirt/qemu.conf` to mitigate permission issues on storage pools.
 
-## Deploy a cluster
+## Getting started
+
+### Provision cluster nodes
 
 By default we'll deploy a cluster on three nodes, they will have both the control-plane and worker roles.
 
@@ -24,7 +26,9 @@ _If you're setting a lower resource values on each node then you might need to s
 ```
 sudo virsh net-dhcp-leases k8s_net
 ```
-6. Install a CNI plugin:
+6. Proceed with the bootstrapping the Kubernetes cluster using e.g. `kubeadm`.
+
+### Install a CNI plugin:
 
 Flannel CNI:
 ```
@@ -36,7 +40,7 @@ kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/
 ```
 Cilium CNI: https://docs.cilium.io/en/stable/installation/k8s-install-kubeadm/#deploy-cilium
 
-## Multi node control plane (for high availability)
+### Create a multi-node control plane (for high availability)
 
 Add control-plane nodes to the cluster:
 ```
@@ -50,7 +54,7 @@ kubeadm token create --print-join-command
 ```
 2. Use the generate join command and run that on the worker node.
 
-## Upgrade cluster
+### Upgrade a cluster
 
 On the first control-plane node:
 
@@ -93,13 +97,6 @@ kubectl uncordon <node-to-uncordon>
 ```
 8. Repeat on the rest of the control-plane nodes!
 
-## After restart of your computer
+## Clean up the cluster
 
-You might need to start your VMs manually after a restart:
-```
-sudo virsh net-start k8s_net
-sudo virsh start <cluster name>-cp01
-sudo virst start <cluster name>-worker01
-```
-
-## Clean up
+Run the clean-up utility script: `scripts/clean_up.sh`
