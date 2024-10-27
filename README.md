@@ -28,6 +28,14 @@ sudo virsh net-dhcp-leases k8s_net
 ```
 6. Proceed with the bootstrapping the Kubernetes cluster using e.g. `kubeadm`.
 
+If you have problems with DHCP on the `k8s_net` and you're running `ufw` locally you might want to try the following:
+```
+sudo ufw allow in on virbr1 to any port 67 proto udp
+sudo ufw allow out on virbr1 to any port 68 proto udp
+
+sudo ufw reload
+```
+
 ### Install a CNI plugin:
 
 Flannel CNI:

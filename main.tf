@@ -1,7 +1,9 @@
 resource "libvirt_pool" "pool" {
   name = "k8s"
   type = "dir"
-  path = var.pool_path
+  target {
+    path = var.pool_path
+  }
 }
 
 resource "libvirt_cloudinit_disk" "cloud_init" {
@@ -46,6 +48,10 @@ resource "libvirt_network" "network" {
   name      = "k8s_net"
   mode      = "nat"
   addresses = ["10.17.3.0/24"]
+  autostart = true
+  dhcp {
+    enabled = true
+  }
 }
 
 resource "libvirt_domain" "nodes" {
@@ -63,7 +69,7 @@ resource "libvirt_domain" "nodes" {
 
   network_interface {
     wait_for_lease = true
-    network_name   = libvirt_network.network.name
+    network_id     = libvirt_network.network.id
   }
 
   console {
