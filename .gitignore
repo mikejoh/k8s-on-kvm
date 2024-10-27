@@ -2,3 +2,4 @@
 *.img
 .terraform
 admin.conf
+k8s.auto.tfvars
