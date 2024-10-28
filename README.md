@@ -28,7 +28,7 @@ _If you're setting a lower resource values on each node then you might need to s
 sudo virsh net-dhcp-leases k8s_net
 ```
 
-6. Proceed with the bootstrapping the Kubernetes cluster using e.g. `kubeadm`.
+Proceed with the bootstrapping the Kubernetes cluster using e.g. `kubeadm`.
 
 If you have problems with DHCP on the `k8s_net` and you're running `ufw` locally you might want to try the following:
 
@@ -66,63 +66,6 @@ kubeadm token create --print-join-command
 ```
 
 2. Use the generate join command and run that on the worker node.
-
-### Upgrade a cluster
-
-On the first control-plane node:
-
-1. Upgrade `kubeadm`:
-
-```bash
-export NEXT_VERSION="1.26.2"
-
-apt-mark unhold kubeadm
-apt-get update
-apt-get install -y kubeadm=${NEXT_VERSION}-00
-apt-mark hold kubeadm
-```
-
-2. Check the upgrade plan:
-
-```bash
-kubeadm upgrade plan
-```
-
-3. Apply the upgrade plan:
-
-```bash
-kubeadm upgrade apply ${NEXT_VERSION}
-```
-
-4. Drain the node:
-
-```bash
-kubectl drain <node-to-drain> --ignore-daemonsets
-```
-
-5. Upgrade `kubectl` and `kubelet`:
-
-```bash
-apt-mark unhold kubelet kubectl
-apt-get update
-apt-get install -y kubelet=${NEXT_VERSION}-00 kubectl=${NEXT_VERSION}-00
-apt-mark hold kubelet kubectl
-```
-
-6. Restart the services:
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl restart kubelet
-```
-
-7. Uncordon the node to allow scheduling again:
-
-```bash
-kubectl uncordon <node-to-uncordon>
-```
-
-8. Repeat on the rest of the control-plane nodes!
 
 ### Install a CNI plugin
 
