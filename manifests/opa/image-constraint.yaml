@@ -1,0 +1,38 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: blacklistimages
+spec:
+  crd:
+    spec:
+      names:
+        kind: BlacklistImages
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package blacklistimages
+
+        images {
+          image := input.review.object.spec.containers[_].image
+          not startswith(image, "docker-fake.io/")
+          not startswith(image, "google-gcr-fake.com/")
+          not startswith(image, "very-bad-registry.com/") # ADD THIS LINE
+        }
+
+        violation[{"msg": msg}] {
+          not images
+          msg := "not trusted image!"
+        }
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: BlacklistImages
+metadata:
+  name: blacklist-images
+spec:
+  enforcementAction: deny
+  match:
+    kinds:
+      - apiGroups:
+          - ""
+        kinds:
+          - Pod

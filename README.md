@@ -1,14 +1,18 @@
 # Kubernetes on KVM
 
-## Pre-requisites
+Deploy (small) Kubernetes clusters on KVM, all from scratch! 🚀
 
-* KVM
+## Pre-requisites ✅
+
+* KVM (see your favourite Linux distribution how-to)
 * OpenTofu (the `terraform` fork)
 
-## Notes
+## Important notes 🗒️
 
 * See the `scripts/` folder for various utility scripts.
 * You probably want to change `user` and `group` to `libvirt-qemu` and `kvm` respectively in `/etc/libvirt/qemu.conf` to mitigate permission issues on storage pools.
+* The VMs will be running a Ubuntu 24.04 image (latest)
+* You'll get `containerd` _and_ CRI-O as runtimes, if you want to test something related to e.g. `RuntimeClass`
 
 ## Getting started
 
@@ -86,8 +90,31 @@ Cilium CNI:
 ```bash
 snap install helm --classic
 helm repo add cilium https://helm.cilium.io/
-helm install cilium cilium/cilium --version 1.16.3 --namespace kube-system
+helm upgrade --install \
+    cilium \
+    cilium/cilium \
+    --version 1.16.3 \
+    --namespace kube-system \
+    --set envoy.enabled=false
 ```
+
+## Install Open Policy Agent Gatekeeper
+
+1. Install:
+
+```bash
+helm upgrade \
+    --install \
+    gatekeeper \
+    gatekeeper/gatekeeper \
+    --namespace gatekeeper-system \
+    --create-namespace \
+    --set replicas=1 \
+    --set controllerManager.resources=null \
+    --set audit.resources=null
+```
+
+2. Add a constraint template.
 
 ### Clean up the cluster
 
