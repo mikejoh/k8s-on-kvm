@@ -1,0 +1,8 @@
+apiVersion: "cilium.io/v2alpha1"
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: l2announcement
+spec:
+  interfaces:
+  - ^ens[0-9]+
+  loadBalancerIPs: true

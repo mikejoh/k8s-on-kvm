@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-crio
+spec:
+  runtimeClassName: crio
+  containers:
+    - image: nginx
+      name: nginx
+      ports:
+        - containerPort: 80
