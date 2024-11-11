@@ -48,7 +48,7 @@ data "template_file" "network_config" {
 resource "libvirt_network" "network" {
   name      = "k8s_net"
   mode      = "nat"
-  addresses = ["192.168.10.0/24"]
+  addresses = [var.k8s_network_cidr]
   autostart = true
   dhcp {
     enabled = true

@@ -3,6 +3,7 @@ cluster_name              = "k8s01"
 image_source              = "https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img"
 pool_path                 = "" # Add path here
 ssh_public_key_path       = "" # Add path here
+k8s_network_cidr          = "" # The network address range that the VMs will be handed out IP addresses from
 
 k8s_nodes = [
   {

@@ -10,6 +10,10 @@ variable "cluster_name" {
   type = string
 }
 
+variable "k8s_network_cidr" {
+  type = string
+}
+
 variable "k8s_nodes" {
   type = set(object({
     name      = string

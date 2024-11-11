@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: team-a-egress-to-team-b
+  namespace: team-a
+spec:
+  podSelector:
+    matchLabels:
+      team: a
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              team: b
+        - podSelector:
+            matchLabels:
+              team: b
+      ports:
+        - protocol: TCP
+          port: 80

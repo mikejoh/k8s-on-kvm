@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-# Remove all resources created with todu
+# Remove all resources created with tofu
 for dom in $(sudo virsh list --all --name); do
     echo "Shutting down $dom..."
     sudo virsh shutdown "$dom"
@@ -18,9 +18,9 @@ for dom in $(sudo virsh list --all --name); do
     sudo virsh undefine "$dom" --remove-all-storage
 done
 
-sudo virsh net-undefine k8s_net
-sudo virsh net-destroy k8s_net
-sudo virsh pool-undefine k8s
-sudo virsh pool-destroy k8s
-
 rm -rf terraform.tfstate*
+
+sudo virsh net-undefine k8s_net || true
+sudo virsh net-destroy k8s_net || true
+sudo virsh pool-undefine k8s || true 
+sudo virsh pool-destroy k8s || true
