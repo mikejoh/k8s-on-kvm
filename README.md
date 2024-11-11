@@ -14,7 +14,7 @@ Deploy (small) Kubernetes clusters on KVM, all from scratch! 🚀
 * The VMs will be running a Ubuntu 24.04 image (latest)
 * You'll get `containerd` _and_ CRI-O as runtimes, if you want to test something related to e.g. `RuntimeClass`
 
-## Getting started
+## Getting started 🏃
 
 ### Provision cluster nodes
 
@@ -34,32 +34,16 @@ sudo virsh net-dhcp-leases k8s_net
 
 Proceed with the bootstrapping the Kubernetes cluster using e.g. `kubeadm`.
 
-If you have problems with DHCP on the `k8s_net` and you're running `ufw` locally you might want to try the following:
-
-```bash
-sudo ufw allow in on virbr1 to any port 67 proto udp
-sudo ufw allow out on virbr1 to any port 68 proto udp
-
-sudo ufw reload
-```
-
 Remember that more `ufw` tweaking might be needed since it'll probably block traffic passing the bridge interface (created via the libvirt provider).
 
 ### Bootstrap the first control-plane node
 
 ```bash
-sudo kubeadm init --control-plane-endpoint "LOAD_BALANCER_DNS:LOAD_BALANCER_PORT" --upload-certs
+CONTROL_PLANE_IP=$(ip addr show ens3 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
+sudo kubeadm init --skip-phases=addon/kube-proxy --control-plane-endpoint "$CONTROL_PLANE_IP:6443" --upload-certs
 ```
 
-Replace `LOAD_BALANCER_DNS:LOAD_BALANCER_PORT` with e.g. `<IP of your VM>:6443`
-
-### Create a multi-node control plane (for high availability)
-
-Add control-plane nodes to the cluster:
-
-```bash
-echo "$(kubeadm token create --print-join-command) --control-plane --certificate-key $(kubeadm init phase upload-certs --upload-certs --skip-headers --skip-log-headers 2>/dev/null | tail -n 1)"
-```
+### Add a worker node
 
 Add worker nodes to the cluster:
 
@@ -71,34 +55,25 @@ kubeadm token create --print-join-command
 
 2. Use the generate join command and run that on the worker node.
 
-### Install a CNI plugin
-
-Flannel CNI:
+### Install Cilium
 
 ```bash
-kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
-```
-
-Calico CNI:
-
-```bash
-kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
-```
-
-Cilium CNI:
-
-```bash
-snap install helm --classic
-helm repo add cilium https://helm.cilium.io/
 helm upgrade --install \
     cilium \
     cilium/cilium \
     --version 1.16.3 \
     --namespace kube-system \
+    --set externalIPs.enabled=true \
+    --set l2announcements.enabled=true \
+    --set kubeProxyReplacement=true \
+    --set k8sServiceHost="192.168.10.247" \
+    --set k8sServicePort="6443" \
     --set envoy.enabled=false
 ```
 
-## Install Open Policy Agent Gatekeeper
+## Add-ons
+
+### Install Open Policy Agent Gatekeeper
 
 1. Install:
 

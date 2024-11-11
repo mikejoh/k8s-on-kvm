@@ -4,5 +4,5 @@ metadata:
   name: "lbip-pool"
 spec:
   blocks:
-  - start: "10.17.3.10"
-    stop: "10.17.3.20"
+  - start: "192.168.10.10"
+    stop: "192.168.10.20"

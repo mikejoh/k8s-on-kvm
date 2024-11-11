@@ -1,4 +1,4 @@
-variable "kubernetes_version" {
+variable "kubernetes_minor_version" {
   type = string
 }
 

@@ -32,11 +32,12 @@ resource "libvirt_volume" "resized_volume" {
 
 data "template_file" "cloud_init" {
   for_each = { for node in var.k8s_nodes : "${node.name}" => node }
+
   template = templatefile("${path.module}/cloud-init/cloud_init.cfg", {
-    ssh_public_key     = file("${var.ssh_public_key_path}")
-    hostname           = "${var.cluster_name}-${each.value.name}"
-    kubernetes_version = "${var.kubernetes_version}"
-    node_type          = "${each.value.node_type}"
+    ssh_public_key           = file("${var.ssh_public_key_path}")
+    hostname                 = "${var.cluster_name}-${each.value.name}"
+    kubernetes_minor_version = "${var.kubernetes_minor_version}"
+    node_type                = "${each.value.node_type}"
   })
 }
 
@@ -47,7 +48,7 @@ data "template_file" "network_config" {
 resource "libvirt_network" "network" {
   name      = "k8s_net"
   mode      = "nat"
-  addresses = ["10.17.3.0/24"]
+  addresses = ["192.168.10.0/24"]
   autostart = true
   dhcp {
     enabled = true
