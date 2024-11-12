@@ -26,17 +26,41 @@ _If you're setting a lower resource values on each node then you might need to s
 2. Run `tofu init`
 3. Run `tofu plan`
 4. Run `tofu apply`
-5. SSH to all nodes using the private and public key pair you referenced when deploying the cluster. You can find the IP addresses of the cluster nodes by running:
+5. The needed nodes shall be provisioned with everything included for you to start bootstrapping the cluster.
+
+### Accessing the nodes
+
+#### SSH to one node a time
+
+To find out the IP addresses of the VMs you can run the following using `virsh`:
 
 ```bash
 sudo virsh net-dhcp-leases k8s_net
 ```
 
-Proceed with the bootstrapping the Kubernetes cluster using e.g. `kubeadm`.
+#### SSH using the provided helper script
 
-Remember that more `ufw` tweaking might be needed since it'll probably block traffic passing the bridge interface (created via the libvirt provider).
+This requires that you have [`fzf`](https://github.com/junegunn/fzf) installed.
+
+```bash
+PRIVATE_SSH_KEY=~/.ssh/kvm-k8s scripts/ssh.sh
+```
+
+_Make sure you're using the private key that matches the public key added as part of the cluster node provisioning. We're adding a user called `cloud` by default that has the provided public key as one of the `ssh_authorized_keys`._
+
+#### Using `tmux` and `xpanes` to SSH to all available nodes
+
+Don't forget to inline the private key path below and replace `<PRIVATE_KEY>` before running the command:
+
+```bash
+tmux
+
+sudo virsh net-dhcp-leases k8s_net | tail -n +3 | awk '{print $5 }' | cut -d"/" -f1 | xpanes -l ev -c 'ssh -l cloud -i <PRIVATE_KEY> {}'
+```
 
 ### Bootstrap the first control-plane node
+
+_Please note that we're skipping the addon `kube-proxy` since in these clusters we want to utilize Cilium as the CNI and with a configuration that replaces the need for `kube-proxy`._
 
 ```bash
 CONTROL_PLANE_IP=$(ip addr show ens3 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
@@ -58,17 +82,7 @@ kubeadm token create --print-join-command
 ### Install Cilium
 
 ```bash
-helm upgrade --install \
-    cilium \
-    cilium/cilium \
-    --version 1.16.3 \
-    --namespace kube-system \
-    --set externalIPs.enabled=true \
-    --set l2announcements.enabled=true \
-    --set kubeProxyReplacement=true \
-    --set k8sServiceHost="192.168.10.247" \
-    --set k8sServicePort="6443" \
-    --set envoy.enabled=false
+./scripts/install_cilium.sh
 ```
 
 ## Add-ons
