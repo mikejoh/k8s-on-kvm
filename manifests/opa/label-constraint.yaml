@@ -8,7 +8,6 @@ spec:
       names:
         kind: K8sRequiredLabels
       validation:
-        # Schema for the `parameters` field
         openAPIV3Schema:
           type: object
           properties:
