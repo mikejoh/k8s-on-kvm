@@ -2,19 +2,19 @@
 
 Deploy (small) Kubernetes clusters on KVM, all from scratch! 🚀
 
-## Pre-requisites ✅
+## ✅ Pre-requisites
 
 * KVM (see your favourite Linux distribution how-to)
 * OpenTofu (the `terraform` fork)
 
-## Important notes 🗒️
+## 🗒️ Important notes
 
 * See the `scripts/` folder for various utility scripts.
 * You probably want to change `user` and `group` to `libvirt-qemu` and `kvm` respectively in `/etc/libvirt/qemu.conf` to mitigate permission issues on storage pools.
 * The VMs will be running a Ubuntu 24.04 image (latest)
 * You'll get `containerd` _and_ CRI-O as runtimes, if you want to test something related to e.g. `RuntimeClass`
 
-## Getting started 🏃
+## 🏃 Getting started
 
 ### Provision cluster nodes
 
@@ -180,7 +180,7 @@ _Please note that for workers you'll only install a newer version of the `kubele
 
 _Note that we run Cilium with `kubeProxyReplacement=true` with `kube-proxy` running, you could remove all things related to `kube-proxy` [manually](https://docs.cilium.io/en/stable/network/kubernetes/kubeproxy-free/#quick-start) or skip the `kube-proxy` phase during `kubeadm init`._
 
-## Add-ons
+## 📚 Add-ons
 
 ### Install Open Policy Agent Gatekeeper
 
