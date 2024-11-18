@@ -172,6 +172,12 @@ k8s01-w01    Ready    <none>          4d20h   v1.30.6
 
 _Please note that for workers you'll only install a newer version of the `kubelet`!_
 
+### Clean up the cluster
+
+Run the clean-up utility script: `scripts/clean_up.sh`, please note that this removes everything related to the VMs and `tofu` state.
+
+## 📚 Add-ons
+
 ### Install Cilium
 
 ```bash
@@ -179,8 +185,6 @@ _Please note that for workers you'll only install a newer version of the `kubele
 ```
 
 _Note that we run Cilium with `kubeProxyReplacement=true` with `kube-proxy` running, you could remove all things related to `kube-proxy` [manually](https://docs.cilium.io/en/stable/network/kubernetes/kubeproxy-free/#quick-start) or skip the `kube-proxy` phase during `kubeadm init`._
-
-## 📚 Add-ons
 
 ### Install Open Policy Agent Gatekeeper
 
@@ -195,7 +199,3 @@ _Note that we run Cilium with `kubeProxyReplacement=true` with `kube-proxy` runn
 ```bash
 kubectl create -f manifests/opa/image-constraint.yaml
 ```
-
-### Clean up the cluster
-
-Run the clean-up utility script: `scripts/clean_up.sh`, please note that this removes everything related to the VMs and `tofu` state.
