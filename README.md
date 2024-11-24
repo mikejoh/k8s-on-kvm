@@ -15,6 +15,13 @@ Deploy (small) Kubernetes clusters on KVM, all from scratch! 🚀
 
 ## 🏃 Getting started
 
+If you run a `ufw` firewall locally you might need to add the following before continuing:
+
+```bash
+ufw allow in on virbr1
+ufw allow out on virbr1
+```
+
 ### Provision cluster nodes
 
 By default we'll deploy a cluster on three nodes, they will have both the control-plane and worker roles.
@@ -200,4 +207,5 @@ _Note that we run Cilium with `kubeProxyReplacement=true` with `kube-proxy` runn
 ```bash
 kubectl create -f manifests/opa/image-constraint.yaml
 ```
+
 gst
