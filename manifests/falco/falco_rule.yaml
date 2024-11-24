@@ -1,8 +1,9 @@
-- rule: priv
+- rule: privileged
+  desc: Informational log if a container is running as privileged
   condition: >
     container and
     container.privileged=true and
     evt.type in (open, openat, write, create)
   output: >
-    cid=%container.id k8s_pod=%k8s.pod.name ns=%k8s.ns.name file=%fd.name
+    c=%container.id p=%k8s.pod.name ns=%k8s.ns.name file=%fd.name
   priority: INFO

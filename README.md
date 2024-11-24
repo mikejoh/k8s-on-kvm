@@ -11,8 +11,7 @@ Deploy (small) Kubernetes clusters on KVM, all from scratch! 🚀
 
 * See the `scripts/` folder for various utility scripts.
 * You probably want to change `user` and `group` to `libvirt-qemu` and `kvm` respectively in `/etc/libvirt/qemu.conf` to mitigate permission issues on storage pools.
-* The VMs will be running a Ubuntu 24.04 image (latest)
-* You'll get `containerd` _and_ CRI-O as runtimes, if you want to test something related to e.g. `RuntimeClass`
+* All cluster nodes will be running Ubuntu 24.04.
 
 ## 🏃 Getting started
 
@@ -29,6 +28,8 @@ _If you're setting a lower resource values on each node then you might need to s
 5. The needed nodes shall be provisioned with everything included for you to start bootstrapping the cluster.
 
 ### Accessing the nodes
+
+_Remember to start your VMs after a reboot!_
 
 #### SSH to one node a time
 
@@ -199,3 +200,4 @@ _Note that we run Cilium with `kubeProxyReplacement=true` with `kube-proxy` runn
 ```bash
 kubectl create -f manifests/opa/image-constraint.yaml
 ```
+gst
