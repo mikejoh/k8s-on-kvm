@@ -207,5 +207,3 @@ _Note that we run Cilium with `kubeProxyReplacement=true` with `kube-proxy` runn
 ```bash
 kubectl create -f manifests/opa/image-constraint.yaml
 ```
-
-gst

@@ -9,9 +9,14 @@ helm repo update cilium
 helm upgrade --install \
     cilium \
     cilium/cilium \
-    --version 1.16.3 \
+    --version 1.16.4 \
     --namespace kube-system \
     --set kubeProxyReplacement=true \
+    --set ipam.mode=kubernetes \
+    --set tunnelProtocol="" \
     --set envoy.enabled=false \
+    --set routingMode="native" \
+    --set autoDirectNodeRoutes=true \
+    --set bpf.masquerade=true \
     --set k8sServiceHost="$CONTROL_PLANE_NODE_IP" \
     --set k8sServicePort="6443"
