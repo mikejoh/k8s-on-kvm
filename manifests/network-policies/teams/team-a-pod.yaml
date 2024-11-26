@@ -8,8 +8,8 @@ metadata:
   namespace: team-a
 spec:
   containers:
-    - image: nginx
-      name: nginx
+    - image: mikejoh/debugc:latest
+      name: debugc
       resources: {}
   dnsPolicy: ClusterFirst
   restartPolicy: Never
