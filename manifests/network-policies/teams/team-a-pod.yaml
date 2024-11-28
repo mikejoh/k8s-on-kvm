@@ -2,14 +2,13 @@ apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    run: nginx
     team: a
   name: team-a-nginx
   namespace: team-a
 spec:
   containers:
-    - image: mikejoh/debugc:latest
-      name: debugc
+    - image: mikejoh/nginxplusplus:latest
+      name: nginxplusplus
       resources: {}
   dnsPolicy: ClusterFirst
   restartPolicy: Never

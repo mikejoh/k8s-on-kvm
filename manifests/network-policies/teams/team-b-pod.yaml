@@ -7,8 +7,8 @@ metadata:
   namespace: team-b
 spec:
   containers:
-    - image: mikejoh/debugc:latest
-      name: debugc
+    - image: mikejoh/nginxplusplus:latest
+      name: nginxplusplus
       resources: {}
   dnsPolicy: ClusterFirst
   restartPolicy: Never

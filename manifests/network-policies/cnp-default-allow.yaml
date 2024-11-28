@@ -1,0 +1,27 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: default-allow
+  namespace: team-a
+spec:
+  endpointSelector:
+    matchLabels: {} # Apply this policy to all Pods in Namespace team-a
+  egress:
+    - toEndpoints:
+        - {} # ALLOW egress to all Pods in Namespace team-a
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+  ingress:
+    - fromEndpoints: # ALLOW ingress from all Pods in Namespaace team-a
+        - {}

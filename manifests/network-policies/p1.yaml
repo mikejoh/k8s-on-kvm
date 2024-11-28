@@ -1,0 +1,19 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: p1
+  namespace: team-a
+spec:
+  endpointSelector:
+    matchLabels: {}
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": team-b 
+            team: b
+      toPorts:
+        - ports:
+          - port: "80"
+            protocol: "TCP"
+      authentication:
+        mode: "required"

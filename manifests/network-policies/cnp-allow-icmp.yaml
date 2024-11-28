@@ -1,0 +1,16 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: "icmp-rule"
+  namespace: "team-a"
+spec:
+  endpointSelector:
+    matchLabels:
+      team: a
+  egress:
+    - icmps:
+        - fields:
+            - type: 8
+              family: IPv4
+            - type: EchoRequest
+              family: IPv6
