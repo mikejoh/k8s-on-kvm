@@ -1,0 +1,15 @@
+apiVersion: "networking.k8s.io/v1"
+kind: NetworkPolicy
+metadata:
+  name: "allow-from-all-ns"
+  namespace: team-a
+spec:
+  podSelector: {}
+  ingress:
+  - from: # all entries below from are evaluated with a logical AND, all must be satisified!!
+    - namespaceSelector: {}
+      podSelector: # if this is it's own element, the whole evaluation logic would be a logical OR.
+        matchLabels:
+          allow: to-a
+    ports: []
+# remember that each entry in a rule is evaluated one by one, if ANY of them are satisified the traffic is allowed!
