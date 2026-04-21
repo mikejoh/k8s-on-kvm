@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-CONTROL_PLANE_NODE_IP=$(sudo virsh net-dhcp-leases k8s_net | tail -n +3 | awk '{print $5, $6}' | grep cp01 | awk '{ print $1 }' | cut -d"/" -f1)
+CONTROL_PLANE_NODE_IP=$(virsh net-dhcp-leases k8s_net | tail -n +3 | awk '{print $5, $6}' | grep cp01 | awk '{ print $1 }' | cut -d"/" -f1)
 
 helm repo add cilium https://helm.cilium.io/
 helm repo update cilium

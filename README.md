@@ -15,11 +15,63 @@ Deploy (small) Kubernetes clusters on KVM, all from scratch! 🚀
 
 ## 🏃 Getting started
 
-If you run a `ufw` firewall locally you might need to add the following before continuing:
+### Firewall rules (only if `ufw` is active on the host)
+
+Skip this section if you don't run `ufw`. If you do, don't disable it — add narrowly-scoped rules instead. The cluster VMs sit behind a libvirt NAT network and rely on the host to forward their traffic to the internet; during provisioning, cloud-init downloads apt packages, Kubernetes repos, container images, Falco, etc. `ufw`'s default-drop `FORWARD` policy will silently kill those packets and bootstrap will hang partway through.
+
+The VM subnet is deterministic — whatever you set as `k8s_network_cidr` in `k8s.auto.tfvars`. Scope rules to that CIDR rather than to the bridge interface (libvirt picks `virbr0`, `virbr1`, ... based on creation order, and the name can drift if you recreate networks).
 
 ```bash
-ufw allow in on virbr1
-ufw allow out on virbr1
+# Replace 192.168.10.0/24 with your k8s_network_cidr.
+
+# Allow forwarded traffic from the cluster network to anywhere (internet access)
+sudo ufw route allow from 192.168.10.0/24
+
+# Allow the VMs to reach libvirt's dnsmasq on the host for DHCP and DNS
+sudo ufw allow in on virbr1 to any port 67 proto udp
+sudo ufw allow in on virbr1 to any port 53
+```
+
+If you don't know which bridge libvirt assigned to `k8s_net`, check with `virsh net-dumpxml k8s_net | grep bridge`.
+
+Verify from a node once the VMs are up (cloud-init will have already exercised this if it succeeded):
+
+```bash
+ssh cloud@<node-ip> 'curl -sI https://pkgs.k8s.io | head -1'
+```
+
+### Set up libvirt for rootless access
+
+The scripts in this repo assume you can talk to the system libvirt daemon without `sudo`. Three things need to be true:
+
+1. **Your user is in the `libvirt` group.** Add yourself if not:
+
+    ```bash
+    sudo usermod -aG libvirt "$USER"
+    ```
+
+    Log out and back in (or `newgrp libvirt`) so the group is active in your shell.
+
+2. **The system libvirt daemon is running.** Recent libvirt (default in Arch, Fedora, RHEL 9+) splits the old monolithic `libvirtd` into one socket-activated daemon per subsystem — `virtqemud` handles VM domains, `virtnetworkd` virtual networks, `virtstoraged` storage pools, `virtnwfilterd` packet filters, `virtsecretd` secrets. Enable their sockets so each starts on demand:
+
+    ```bash
+    sudo systemctl enable --now virtqemud.socket virtnetworkd.socket virtstoraged.socket virtnwfilterd.socket virtsecretd.socket
+    ```
+
+    On distros that still ship the monolithic daemon (e.g. Debian, Ubuntu), `sudo systemctl enable --now libvirtd.socket` replaces all of the above.
+
+3. **`virsh` defaults to `qemu:///system`.** Without configuration, bare `virsh` connects to `qemu:///session` — a separate per-user daemon that does *not* see the VMs this repo creates. Point libvirt clients at the system daemon:
+
+    ```bash
+    mkdir -p ~/.config/libvirt
+    echo 'uri_default = "qemu:///system"' >> ~/.config/libvirt/libvirt.conf
+    ```
+
+Verify the wiring before provisioning:
+
+```bash
+virsh uri          # should print qemu:///system
+virsh list --all   # should return without permission errors
 ```
 
 ### Provision cluster nodes
@@ -28,11 +80,22 @@ By default we'll deploy a cluster on three nodes, they will have both the contro
 
 _If you're setting a lower resource values on each node then you might need to set: `--ignore-preflight-errors=mem,numcpu` during `kubeadm init`._
 
-1. Change the `k8s.auto.tfvars` to fit your needs!
-2. Run `tofu init`
-3. Run `tofu plan`
-4. Run `tofu apply`
-5. The needed nodes shall be provisioned with everything included for you to start bootstrapping the cluster.
+1. Generate an SSH keypair that cloud-init will embed into the `cloud` user on each node (skip if you already have one you want to reuse):
+
+    ```bash
+    ssh-keygen -t ed25519 -f ~/.ssh/kvm-k8s -N ''
+    ```
+
+2. Change the `k8s.auto.tfvars` to fit your needs:
+
+    - `ssh_public_key_path` — path to the `.pub` from step 1 (or any existing public key you want authorised on the nodes).
+    - `pool_path` — an existing directory on your host that qemu (typically running as `libvirt-qemu:kvm`) can read and write. A common choice is a dedicated directory under `/var/lib/libvirt/` (the default libvirt storage area), shared with any other VMs you run locally.
+    - `k8s_network_cidr`, `cluster_name`, `kubernetes_minor_version`, and the `k8s_nodes` list — tune to match the cluster you want.
+
+3. Run `tofu init`
+4. Run `tofu plan`
+5. Run `tofu apply`
+6. The needed nodes shall be provisioned with everything included for you to start bootstrapping the cluster.
 
 ### Accessing the nodes
 
@@ -43,7 +106,7 @@ _Remember to start your VMs after a reboot!_
 To find out the IP addresses of the VMs you can run the following using `virsh`:
 
 ```bash
-sudo virsh net-dhcp-leases k8s_net
+virsh net-dhcp-leases k8s_net
 ```
 
 #### SSH using the provided helper script
@@ -63,7 +126,7 @@ Don't forget to inline the private key path below and replace `<PRIVATE_KEY>` be
 ```bash
 tmux
 
-sudo virsh net-dhcp-leases k8s_net | tail -n +3 | awk '{print $5 }' | cut -d"/" -f1 | xpanes -l ev -c 'ssh -l cloud -i <PRIVATE_KEY> {}'
+virsh net-dhcp-leases k8s_net | tail -n +3 | awk '{print $5 }' | cut -d"/" -f1 | xpanes -l ev -c 'ssh -l cloud -i <PRIVATE_KEY> {}'
 ```
 
 ### Bootstrap the first control-plane node
@@ -182,7 +245,7 @@ _Please note that for workers you'll only install a newer version of the `kubele
 
 ### Clean up the cluster
 
-Run the clean-up utility script: `scripts/clean_up.sh`, please note that this removes everything related to the VMs and `tofu` state.
+Run `scripts/clean_up.sh` to tear down this cluster and reset tofu state. The script reads `cluster_name` from `k8s.auto.tfvars` and only touches domains whose name starts with that prefix, so unrelated VMs on the same libvirt host are left alone. It also destroys the `k8s_net` network and `k8s` pool (both created by this repo) and removes `terraform.tfstate*` files.
 
 ## 📚 Add-ons
 

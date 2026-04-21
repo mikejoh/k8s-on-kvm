@@ -10,6 +10,6 @@ spec:
     - namespaceSelector: {}
       podSelector: # if this is it's own element, the whole evaluation logic would be a logical OR.
         matchLabels:
-          allow: to-a
+          team: c
     ports: []
 # remember that each entry in a rule is evaluated one by one, if ANY of them are satisified the traffic is allowed!
